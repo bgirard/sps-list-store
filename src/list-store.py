@@ -26,7 +26,7 @@ class ListList(webapp2.RequestHandler):
       first = False
 
 class ListStore(webapp2.RequestHandler):
-  def get(self):
+  def post(self):
 
     nameArg = self.request.get("name", None)
     if nameArg == None:
