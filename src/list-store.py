@@ -1,5 +1,6 @@
 import webapp2
 import datetime
+import json
 from google.appengine.api import namespace_manager
 from google.appengine.ext import db
 
@@ -17,17 +18,15 @@ class ListItemModel(db.Expando):
 class ListList(webapp2.RequestHandler):
   def get(self):
     self.response.headers['Access-Control-Allow-Origin'] = '*'
-    self.response.headers['Content-Type'] = 'text/plain'
+    self.response.headers['Content-Type'] = 'application/json'
     result = db.GqlQuery("SELECT * FROM ListListModel") 
-    first = True
+    response = []
     for e in result:
-      if not first:
-        self.response.write(",")
-      self.response.write(e.name)
-      first = False
+      response.append(e.name)
+    self.response.write(json.dumps(response))
 
 class ListStore(webapp2.RequestHandler):
-  def post(self):
+  def get(self):
     self.response.headers['Access-Control-Allow-Origin'] = '*'
     nameArg = self.request.get("name", None)
     if nameArg == None:
@@ -57,7 +56,9 @@ class ListStore(webapp2.RequestHandler):
 class QueryStore(webapp2.RequestHandler):
   def get(self):
     self.response.headers['Access-Control-Allow-Origin'] = '*'
-    self.response.headers['Content-Type'] = 'text/plain'
+    self.response.headers['Content-Type'] = 'application/json'
+
+    response = []
 
     nameArg = self.request.get("name", None)
     if nameArg == None:
@@ -69,7 +70,6 @@ class QueryStore(webapp2.RequestHandler):
       return
 
     result = db.GqlQuery("SELECT * FROM ListItemModel WHERE name = :1", nameArg) 
-    first = True
     args = self.request.arguments()
     for e in result:
       skipItem = False
@@ -86,13 +86,13 @@ class QueryStore(webapp2.RequestHandler):
           break
       if skipItem:
         continue;
-      if not first:
-        self.response.write(",")
-      self.response.write("name="+ e.name + " ")
+      item = {}
+      response.append(item)
+      item['name'] = e.name
       for p in props:
-        self.response.write(p +"="+ getattr(e, p) + " ")
-      first = False
-      self.response.write("\n")
+        item[p] = getattr(e, p)
+
+    self.response.write(json.dumps(response))
 
 class HelpRequest(webapp2.RequestHandler):
   def get(self):
