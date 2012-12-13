@@ -16,6 +16,7 @@ class ListItemModel(db.Expando):
 
 class ListList(webapp2.RequestHandler):
   def get(self):
+    self.response.headers['Access-Control-Allow-Origin'] = '*'
     self.response.headers['Content-Type'] = 'text/plain'
     result = db.GqlQuery("SELECT * FROM ListListModel") 
     first = True
@@ -27,7 +28,7 @@ class ListList(webapp2.RequestHandler):
 
 class ListStore(webapp2.RequestHandler):
   def post(self):
-
+    self.response.headers['Access-Control-Allow-Origin'] = '*'
     nameArg = self.request.get("name", None)
     if nameArg == None:
       error(self, "name is required")
@@ -55,6 +56,7 @@ class ListStore(webapp2.RequestHandler):
     
 class QueryStore(webapp2.RequestHandler):
   def get(self):
+    self.response.headers['Access-Control-Allow-Origin'] = '*'
     self.response.headers['Content-Type'] = 'text/plain'
 
     nameArg = self.request.get("name", None)
@@ -94,6 +96,7 @@ class QueryStore(webapp2.RequestHandler):
 
 class HelpRequest(webapp2.RequestHandler):
   def get(self):
+    self.response.headers['Access-Control-Allow-Origin'] = '*'
     self.response.headers['Content-Type'] = 'text/plain'
     self.response.write("/list-list - Provide a list of list names\n")
     self.response.write("/list-store?name&** - Store an item in list 'name'\n")
