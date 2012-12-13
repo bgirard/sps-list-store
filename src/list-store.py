@@ -68,16 +68,42 @@ class QueryStore(webapp2.RequestHandler):
 
     result = db.GqlQuery("SELECT * FROM ListItemModel WHERE name = :1", nameArg) 
     first = True
+    args = self.request.arguments()
     for e in result:
+      skipItem = False
+      props = e.dynamic_properties() 
+      for arg in args:
+        if arg == "name":
+          continue
+        if not (arg in props):
+          skipItem = True
+          break
+        argValue = self.request.get(arg)
+        if getattr(e, arg, None) != argValue:
+          skipItem = True
+          break
+      if skipItem:
+        continue;
       if not first:
         self.response.write(",")
-      props = e.dynamic_properties() 
+      self.response.write("name="+ e.name + " ")
       for p in props:
         self.response.write(p +"="+ getattr(e, p) + " ")
       first = False
+      self.response.write("\n")
+
+class HelpRequest(webapp2.RequestHandler):
+  def get(self):
+    self.response.headers['Content-Type'] = 'text/plain'
+    self.response.write("/list-list - Provide a list of list names\n")
+    self.response.write("/list-store?name&** - Store an item in list 'name'\n")
+    self.response.write("/query-list-store?name&** - Fetch all items from list 'name' matching any specific value (example platform=mac)\n")
+    self.response.write("/help - This help menu\n")
 
 app = webapp2.WSGIApplication([('/', ListStore),
+                               ('/help', HelpRequest),
                                ('/list-list', ListList),
                                ('/list-store', ListStore),
                                ('/query-list-store', QueryStore)],
                               debug=True)
+
