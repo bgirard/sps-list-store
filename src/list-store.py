@@ -26,7 +26,7 @@ class ListList(webapp2.RequestHandler):
     self.response.write(json.dumps(response))
 
 class ListStore(webapp2.RequestHandler):
-  def get(self):
+  def post(self):
     self.response.headers['Access-Control-Allow-Origin'] = '*'
     nameArg = self.request.get("name", None)
     if nameArg == None:
