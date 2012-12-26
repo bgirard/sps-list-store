@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Report viewer</title>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    List: <input id="list_name" value="shutdown"></input><br>
+    Platform: <input id="filter_platform" value=""></input><br>
+    Duration Minimum: <input id="filter_duration" value=""></input><br>
+    <input type="button" value="Search" onclick="search()"></input>
+    <div id="response"></div>
+  </body>
+  <script>
+
+var filterColumn = {
+  language: true,
+  vendor: true,
+  vendorSub: true,
+  product: true,
+  productSub: true,
+  store: true,
+};
+
+function search() {
+  // http://list-store.appspot.com/query-list-store?name=profiler.shutdown
+  var url = "http://list-store.appspot.com/query-list-store?name=profiler." + document.getElementById("list_name").value;
+  var filterPlatform = document.getElementById("filter_platform").value;
+  var filterDuration = null;
+  try {
+    filterDuration = parseInt(document.getElementById("filter_duration").value);
+  } catch (e) {}
+  if (filterPlatform.length > 0) {
+    url += "&platform=" + filterPlatform;
+  }
+  document.getElementById("response").innerHTML = "";
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", url, true);
+  xhr.responseType = "json";
+  xhr.onreadystatechange = function (e) {
+    if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 0)) {
+      var res = xhr.response;
+      var headers = {};
+      for (var i in res) {
+        var line = res[i];
+        for (var j in line) {
+          if (filterColumn[j] === true) {
+            continue;
+          }
+          headers[j] = true;
+        }
+      }
+      var tableElem = document.createElement("table");
+      tableElem.border = 1;
+      document.getElementById("response").appendChild(tableElem);
+      var tableBodyElem = document.createElement("tbody");
+      tableElem.appendChild(tableBodyElem);
+      // Header
+      var tableHeaderRow = document.createElement("tr");
+      tableBodyElem.appendChild(tableHeaderRow);
+      for (var header in headers) {
+        var tableHeader = document.createElement("th");
+        tableHeader.textContent = header;
+        tableHeaderRow.appendChild(tableHeader);
+      }
+      for (var i in res) {
+        var line = res[i];
+        if (filterDuration && "duration" in line && line["duration"] < filterDuration) {
+          continue; 
+        }
+        var tableRow = document.createElement("tr");
+        tableBodyElem.appendChild(tableRow);
+        for (var header in headers) {
+          var tableEntry = document.createElement("td");
+          tableRow.appendChild(tableEntry);
+          var validHash = (header === "hash" && line[header].length < 50);
+          if (header === "hash") {
+            if (line[header].length < 50) {
+              var link = document.createElement("a");
+              link.href = "http://people.mozilla.com/~bgirard/cleopatra/?report=" + line[header];
+              link.textContent = line[header];
+              tableEntry.appendChild(link);
+            } else {
+              tableEntry.textContent = "Profile failed to upload, was likely too big";
+            }
+          } else {
+            tableEntry.textContent = line[header];
+          }
+        }
+      }
+    }
+  };
+  xhr.onerror = function (e) {
+    alert("Error fetching: " + url);
+  }
+  xhr.send(null);
+}
+
+search();
+  </script>
+</html>
